@@ -1,0 +1,18 @@
+name: CI
+"on":
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install scikit-learn numpy pytest
+      - run: python -c "from analysis.clustering import EmbeddingClusterer; import numpy as np; rng=np.random.default_rng(0); e=rng.standard_normal((30,16)).astype('float32'); r=EmbeddingClusterer().kmeans(e,k=3); assert r.n_clusters==3; print(f'clustering OK sil={r.silhouette:.3f}')"
+      - run: python -c "from search.semantic_search import cosine_search; import numpy as np; rng=np.random.default_rng(0); q=rng.standard_normal(16).astype('float32'); C=rng.standard_normal((20,16)).astype('float32'); texts=[str(i) for i in range(20)]; r=cosine_search(q,C,texts,5); assert len(r)==5; print('search OK')"
+      - run: python -c "from analysis.outliers import EmbeddingOutlierDetector; import numpy as np; rng=np.random.default_rng(0); e=rng.standard_normal((50,16)).astype('float32'); r=EmbeddingOutlierDetector(0.1).isolation_forest(e); print(f'outliers OK: {len(r.indices)} found')"
